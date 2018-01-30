@@ -1,6 +1,8 @@
 (function(){
 	'use strict';
 
+	// need to define .canvas-placeholder, .canvas, .script in the web page
+	// calling penUp(), penDown(), forward(), back(), etc. to draw
 	var PIXEL_RATIO = window.devicePixelRatio || 1;
 	var canvasPlaceholder = document.querySelector('.canvas-placeholder');
 	var canvas = document.querySelector('.canvas');
@@ -10,6 +12,7 @@
 	var DEGREE = PI / 180;
 	var WIDTH, HEIGHT, position, direction, visible, pen, color;
 
+	// when resizing the window, re-cal and re-paint
 	function onResize(evt){
 		WIDTH = canvasPlaceholder.getBoundingClientRect().width * PIXEL_RATIO;
 		HEIGHT = canvasPlaceholder.getBoundingClientRect().height * PIXEL_RATIO;
@@ -24,6 +27,7 @@
 		}
 	}
 
+	// reset the setting
 	function reset(){
 		recenter();
 		direction = deg2rad(90); // facing "up"		
@@ -34,6 +38,7 @@
 
 	function deg2rad(degrees){ return DEGREE * degrees; }
 
+	// draw a turtle
 	function drawTurtle(){
 		var userPen = pen; // save pen state
 		if (visible){
@@ -49,6 +54,7 @@
 		}
 	}
 
+	// draw a circle
 	function drawCircle(radius){
 		// Math for this is from http://www.mathopenref.com/polygonradius.html
 		var userPen = pen; // save pen state
@@ -72,7 +78,6 @@
 
 	}
 
-
 	function _moveForward(distance){
 		var start = position;
 		position = {
@@ -88,6 +93,7 @@
 		}
 	}
 
+	// API for drawing
 	function penUp(){ pen = false; }
 	function penDown(){ pen = true; }
 	function hideTurtle(){ visible = false; }
@@ -100,6 +106,7 @@
 	function right(block){ _turn(-Block.value(block)); }
 	function recenter(){ position = {x: WIDTH/2, y: HEIGHT/2}; }
 
+	// clear the canvas
 	function clear(){
 		ctx.save();
 		ctx.fillStyle = 'white';
@@ -113,6 +120,7 @@
 	clear();
 	drawTurtle();
 
+	// Set up the Menu section
 	Menu.item('Left', left, 5, 'degrees');
 	Menu.item('Right', right, 5, 'degrees');
 	Menu.item('Forward', forward, 10, 'steps');
