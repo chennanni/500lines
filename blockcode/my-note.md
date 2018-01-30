@@ -1,0 +1,18 @@
+- UI
+  - defined in index.html, block.css
+  - three sections: Menu, Script, Canvas
+- Features
+  - implement menu
+    - turtle.js -> Menu.item(...)
+	- menu.js -> menuItem(...)
+	- block.js -> createBlock(...)
+  - implement canvas drawing
+    - turtle.js provide a lists of API to simulate drawing behaviours
+  - implement script
+    - menu.js -> run()
+	- use DOM to get all blocks under script section
+	- keep painting whatever is on the script
+  - implement drag and drop
+    - add css style
+	- change script's DOM
+	- invoke the repaint event
