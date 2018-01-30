@@ -5,6 +5,7 @@
     var dragType = null; // Are we dragging from the menu or from the script?
     var scriptBlocks = []; // Blocks in the script, sorted by position
 
+	// reset parameter status: mainly dragTarget and dragType
     function dragStart(evt){
         if (!matches(evt.target, '.block')) return;
         if (matches(evt.target, '.menu .block')){
@@ -24,7 +25,7 @@
         }
     }
 
-
+	// set dragEnter css
     function dragEnter(evt){
         if (matches(evt.target, '.menu, .script, .content')){
             evt.target.classList.add('over');
@@ -38,6 +39,7 @@
         return false;
     }
 
+	// set dragOver css
     function dragOver(evt){
         if (!matches(evt.target, '.menu, .menu *, .script, .script *, .content')) return;
         if (evt.preventDefault) { evt.preventDefault(); } // Necessary. Allows us to drop.
@@ -49,23 +51,24 @@
         return false;
     }
 
+	// change DOM elements after drop
     function drop(evt){
         if (!matches(evt.target, '.menu, .menu *, .script, .script *')) return;
         var dropTarget = closest(evt.target, '.script .container, .script .block, .menu, .script');
         var dropType = 'script';
         if (matches(dropTarget, '.menu')){ dropType = 'menu'; }
         if (evt.stopPropagation) { evt.stopPropagation(); } // stops the browser from redirecting.
-        if (dragType === 'script' && dropType === 'menu'){
+        if (dragType === 'script' && dropType === 'menu'){ // script -> menu, remove block
             trigger('blockRemoved', dragTarget.parentElement, dragTarget);
             dragTarget.parentElement.removeChild(dragTarget);
-        }else if (dragType ==='script' && dropType === 'script'){
+        }else if (dragType ==='script' && dropType === 'script'){ // script -> script, move block
             if (matches(dropTarget, '.block')){
                 dropTarget.parentElement.insertBefore(dragTarget, dropTarget.nextSibling);
             }else{
                 dropTarget.insertBefore(dragTarget, dropTarget.firstChildElement);
             }
             trigger('blockMoved', dropTarget, dragTarget);
-        }else if (dragType === 'menu' && dropType === 'script'){
+        }else if (dragType === 'menu' && dropType === 'script'){ // menu -> script, new block
             var newNode = dragTarget.cloneNode(true);
             newNode.classList.remove('dragging');
             if (matches(dropTarget, '.block')){
@@ -88,6 +91,7 @@
         _findAndRemoveClass('next');
     }
 
+	// drag and drop events are pre-defined in JS, replace the event handler with custom function.
     document.addEventListener('dragstart', dragStart, false);
     document.addEventListener('dragenter', dragEnter, false);
     document.addEventListener('dragover', dragOver, false);
