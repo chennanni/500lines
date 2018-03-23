@@ -20,7 +20,8 @@ import threading
 import helpers
 
 
-# Shared dispatcher code
+# dispatch commit to test runner
+# loop all available runners and try one by one, if success, delete the commit from pending list
 def dispatch_tests(server, commit_id):
     # NOTE: usually we don't run this forever
     while True:
@@ -44,7 +45,11 @@ class ThreadingTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     dispatched_commits = {} # Keeps track of commits we dispatched
     pending_commits = [] # Keeps track of commits we have yet to dispatch
 
-
+# define how dispatcher handles incoming requests, there are four type of commands
+# 1. status: check if the dispatcher server is alive
+# 2. register: used by test runner to register an instance
+# 3. dispatch: used by observer to dispatch a test runner against a commit
+# 4. results: used by dispatcher to send results to observer
 class DispatcherHandler(SocketServer.BaseRequestHandler):
     """
     The RequestHandler class for our dispatcher.
@@ -106,7 +111,8 @@ class DispatcherHandler(SocketServer.BaseRequestHandler):
 
 
 def serve():
-    parser = argparse.ArgumentParser()
+    # parsing args
+	parser = argparse.ArgumentParser()
     parser.add_argument("--host",
                         help="dispatcher's host, by default it uses localhost",
                         default="localhost",
@@ -120,9 +126,11 @@ def serve():
     # Create the server
     server = ThreadingTCPServer((args.host, int(args.port)), DispatcherHandler)
     print 'serving on %s:%s' % (args.host, int(args.port))
-    # Create a thread to check the runner pool
+    
+	# Create a thread to check the available runners in pool
     def runner_checker(server):
-        def manage_commit_lists(runner):
+        # create a function to delete unresponsive runner
+		def manage_commit_lists(runner):
             for commit, assigned_runner in server.dispatched_commits.iteritems():
                 if assigned_runner == runner:
                     del server.dispatched_commits[commit]
@@ -130,6 +138,7 @@ def serve():
                     break
             server.runners.remove(runner)
 
+		# periodically pings each registered test runner to make sure they are still responsive, if not, remove it
         while not server.dead:
             time.sleep(1)
             for runner in server.runners:
@@ -144,7 +153,7 @@ def serve():
                 except socket.error as e:
                     manage_commit_lists(runner)
 
-    # this will kick off tests that failed
+    # Create a thread to redistribute, this will kick off tests that failed
     def redistribute(server):
         while not server.dead:
             for commit in server.pending_commits:
@@ -153,6 +162,7 @@ def serve():
                 dispatch_tests(server, commit)
                 time.sleep(5)
 
+	# restart the two threads
     runner_heartbeat = threading.Thread(target=runner_checker, args=(server,))
     redistributor = threading.Thread(target=redistribute, args=(server,))
     try:
