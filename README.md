@@ -1,4 +1,4 @@
-*500 Lines or Less*
+*500 Lines (AT MAX)*
 ===================
 
 > "What I cannot create, I do not understand."
