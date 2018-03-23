@@ -18,6 +18,7 @@ import helpers
 
 
 def poll():
+	# parse args
     parser = argparse.ArgumentParser()
     parser.add_argument("--dispatcher-server",
                         help="dispatcher host:port, " \
@@ -27,9 +28,11 @@ def poll():
     parser.add_argument("repo", metavar="REPO", type=str,
                         help="path to the repository this will observe")
     args = parser.parse_args()
-    dispatcher_host, dispatcher_port = args.dispatcher_server.split(":")
-    while True:
-        try:
+	dispatcher_host, dispatcher_port = args.dispatcher_server.split(":")
+    
+	while True:
+        # update repo and check for new commit
+		try:
             # call the bash script that will update the repo and check
             # for changes. If there's a change, it will drop a .commit_id file
             # with the latest commit in the current working directory
@@ -37,6 +40,7 @@ def poll():
         except subprocess.CalledProcessError as e:
             raise Exception("Could not update and check repository. Reason: %s" % e.output)
 
+		# send commit to dispatcher
         if os.path.isfile(".commit_id"):
             # great, we have a change! let's execute the tests
             # First, check the status of the dispatcher server to see
