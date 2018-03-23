@@ -28,7 +28,9 @@ class ThreadingTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     busy = False # Status flag
     dead = False # Status flag
 
-
+# The test runner server responds to two messages from the dispatcher.
+# 1. ping
+# 2. runtest
 class TestHandler(SocketServer.BaseRequestHandler):
     """
     The RequestHandler class for our server.
@@ -83,6 +85,7 @@ class TestHandler(SocketServer.BaseRequestHandler):
 
 
 def serve():
+	# parse args
     range_start = 8900
     parser = argparse.ArgumentParser()
     parser.add_argument("--host",
@@ -101,6 +104,8 @@ def serve():
                         help="path to the repository this will observe")
     args = parser.parse_args()
 
+	# check available port and start test runner server
+	# this design is because there may be multiple test runners started in a distributed manner
     runner_host = args.host
     runner_port = None
     tries = 0
@@ -127,6 +132,7 @@ def serve():
         server = ThreadingTCPServer((runner_host, runner_port), TestHandler)
     server.repo_folder = args.repo
 
+	# register test runner to dispatcher
     dispatcher_host, dispatcher_port = args.dispatcher_server.split(":")
     server.dispatcher_server = {"host":dispatcher_host, "port":dispatcher_port}
     response = helpers.communicate(server.dispatcher_server["host"],
@@ -136,6 +142,7 @@ def serve():
     if response != "OK":
         raise Exception("Can't register with dispatcher!")
 
+	# ping dispatcher constantly
     def dispatcher_checker(server):
         # Checks if the dispatcher went down. If it is down, we will shut down
         # if since the dispatcher may not have the same host/port
